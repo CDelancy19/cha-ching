@@ -2,6 +2,10 @@ const path = require('path')
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
+const mongoose = require('mongoose')
+const bodyParser = require('body-parser')
+const cookieParser = require('cookie-parser')
+
 module.exports = app
 
 // logging middleware
@@ -10,11 +14,26 @@ app.use(morgan('dev'))
 // body parsing middleware
 app.use(express.json())
 
+// Pull in MongoURI from keys.js & connect to DB
+const db = require('./config/keys').mongoURI
+
+mongoose
+  .connect(
+    db,
+    { useNewUrlParser: true }
+  )
+  .then(() => console.log(`💸 💸 💸 Success! MongoDB connected...`))
+  .catch(err => console.log(err))
+
 // auth and api routes
 app.use('/auth', require('./auth'))
 app.use('/api', require('./api'))
 
 app.get('/', (req, res)=> res.sendFile(path.join(__dirname, '..', 'public/index.html')));
+
+app.use(bodyParser.urlencoded({extended : true}));
+app.use(bodyParser.json());
+app.use(cookieParser());
 
 // static file-serving middleware
 app.use(express.static(path.join(__dirname, '..', 'public')))
